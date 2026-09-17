@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getOwnerAccount } from "@/lib/account";
 import { getValidAccessToken } from "@/lib/spotify/oauth";
-import { chunk, getArtists, getRecentlyPlayed, type RecentlyPlayedItem } from "@/lib/spotify/api";
+import { getArtist, getRecentlyPlayed, type RecentlyPlayedItem } from "@/lib/spotify/api";
 import { inferSkip } from "@/lib/spotify/skipInference";
 
 const DEFAULT_SESSION_GAP_MAX_MINUTES = 45;
@@ -89,18 +89,20 @@ export async function POST(request: NextRequest) {
     const cachedIds = new Set((cachedArtists ?? []).map((r) => r.artist_id as string));
     const missingArtistIds = allArtistIds.filter((id) => !cachedIds.has(id));
 
-    for (const batch of chunk(missingArtistIds, 50)) {
-      const artists = await getArtists(accessToken, batch);
-      const rows = artists.map((artist) => ({
-        artist_id: artist.id,
-        genres: artist.genres,
-        popularity: artist.popularity,
-        fetched_at: new Date().toISOString(),
-      }));
-      if (rows.length > 0) {
-        const { error } = await supabase.from("artist_genre_cache").upsert(rows, { onConflict: "artist_id" });
-        if (error) throw new Error(error.message);
-      }
+    // Spotify removed the batch artists endpoint for Dev Mode apps
+    // (Feb 2026) — fetch one at a time instead.
+    for (const artistId of missingArtistIds) {
+      const artist = await getArtist(accessToken, artistId);
+      const { error } = await supabase.from("artist_genre_cache").upsert(
+        {
+          artist_id: artist.id,
+          genres: artist.genres,
+          popularity: artist.popularity,
+          fetched_at: new Date().toISOString(),
+        },
+        { onConflict: "artist_id" }
+      );
+      if (error) throw new Error(error.message);
     }
 
     // Passive skip inference over the chain: [previous last play, ...new plays].

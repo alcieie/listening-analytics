@@ -71,29 +71,15 @@ export type SpotifyArtist = {
   popularity: number;
 };
 
-/** Spotify allows up to 50 artist IDs per call. */
-export async function getArtists(
-  accessToken: string,
-  artistIds: string[]
-): Promise<SpotifyArtist[]> {
-  if (artistIds.length === 0) return [];
-  if (artistIds.length > 50) {
-    throw new Error("getArtists supports at most 50 ids per call; batch the caller instead");
-  }
-
-  const res = await spotifyFetch(
-    `${API_BASE}/artists?ids=${artistIds.join(",")}`,
-    accessToken
-  );
-  if (!res.ok) throw new Error(`GET /artists failed: ${res.status} ${await res.text()}`);
-  const data = await res.json();
-  return data.artists;
-}
-
-export function chunk<T>(items: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    out.push(items.slice(i, i + size));
-  }
-  return out;
+/**
+ * Spotify removed the batch `GET /artists` endpoint (up to 50 ids at once)
+ * for Development Mode apps as of February 2026 — only the single-artist
+ * endpoint still works there. This fetches one artist at a time so it
+ * works regardless of quota mode; the caller is responsible for only
+ * calling it for artists not already in the genre cache.
+ */
+export async function getArtist(accessToken: string, artistId: string): Promise<SpotifyArtist> {
+  const res = await spotifyFetch(`${API_BASE}/artists/${artistId}`, accessToken);
+  if (!res.ok) throw new Error(`GET /artists/${artistId} failed: ${res.status} ${await res.text()}`);
+  return res.json();
 }
