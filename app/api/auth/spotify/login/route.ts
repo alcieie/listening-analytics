@@ -3,6 +3,10 @@ import { buildAuthorizeUrl, generateCodeChallenge, generateCodeVerifier, generat
 
 const TEN_MINUTES = 60 * 10;
 
+// Must never be cached/statically optimized — every request needs a fresh
+// PKCE verifier and CSRF state, or the whole point of PKCE is defeated.
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = generateCodeChallenge(codeVerifier);
