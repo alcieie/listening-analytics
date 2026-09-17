@@ -16,7 +16,7 @@ export default async function DashboardOverviewPage() {
   ]);
 
   return (
-    <div className="max-w-lg space-y-6">
+    <div className="max-w-2xl space-y-6">
       <h1 className="text-xl font-semibold">Overview</h1>
       <dl className="space-y-3 text-sm">
         <div className="flex justify-between border-b border-zinc-100 pb-2 dark:border-zinc-800">

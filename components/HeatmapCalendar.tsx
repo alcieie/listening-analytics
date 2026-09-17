@@ -51,15 +51,11 @@ export function HeatmapCalendar({ days }: Props) {
         {weeks.map((week, i) => (
           <div key={i} className="flex flex-col gap-1">
             {week.map((cell) => (
-              <div key={cell.date} className="group relative h-3 w-3">
-                <div
-                  aria-label={`${cell.date}: ${cell.bucket?.playCount ?? 0} plays, ${cell.bucket?.minutesListened ?? 0} min`}
-                  className={`h-3 w-3 rounded-sm ${colorForCount(cell.bucket?.playCount ?? 0, maxCount)}`}
-                />
-                <div className="pointer-events-none absolute top-full left-1/2 z-10 mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-100 group-hover:opacity-100 dark:bg-zinc-950">
-                  {cell.date}: {cell.bucket?.playCount ?? 0} plays, {cell.bucket?.minutesListened ?? 0} min
-                </div>
-              </div>
+              <div
+                key={cell.date}
+                title={`${cell.date}: ${cell.bucket?.playCount ?? 0} plays, ${cell.bucket?.minutesListened ?? 0} min`}
+                className={`h-3 w-3 rounded-sm ${colorForCount(cell.bucket?.playCount ?? 0, maxCount)}`}
+              />
             ))}
           </div>
         ))}

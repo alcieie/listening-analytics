@@ -15,7 +15,7 @@ export default async function HeatmapPage() {
   const days = await getListeningHeatmap(supabase, session.spotifyAccountId, timeZone);
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-6xl space-y-6">
       <h1 className="text-xl font-semibold">Listening heatmap</h1>
       <HeatmapCalendar days={days} />
     </div>
