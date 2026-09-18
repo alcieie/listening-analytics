@@ -16,7 +16,7 @@ export default async function MoodPage() {
   const trend = await getMoodTrend(supabase, session.spotifyAccountId, timeZone);
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="w-[90%] mx-auto space-y-6">
       <h1 className="text-xl font-semibold">Mood ring</h1>
       <VibeScoreLegend />
       <MoodRingChart byHour={trend.byHour} byWeek={trend.byWeek} />

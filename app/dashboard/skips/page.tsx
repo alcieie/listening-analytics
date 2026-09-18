@@ -14,7 +14,7 @@ export default async function SkipsPage() {
   const stats = await getSkipStats(supabase, session.spotifyAccountId);
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="w-[90%] mx-auto space-y-6">
       <h1 className="text-xl font-semibold">Skip rate</h1>
       <p className="text-sm text-zinc-500">
         What you think you like vs. what you actually listen to, inferred from timing gaps in

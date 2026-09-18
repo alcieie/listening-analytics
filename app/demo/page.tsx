@@ -26,7 +26,7 @@ export default async function DemoPage() {
     : [{ byHour: [], byWeek: [] }, [], { byArtist: [], byGenre: [] }];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-12 px-6 py-10">
+    <div className="mx-auto w-[90%] space-y-12 py-10">
       <DemoBanner />
 
       <section className="space-y-6">
