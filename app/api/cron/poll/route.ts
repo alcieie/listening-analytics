@@ -7,6 +7,12 @@ import { inferSkip } from "@/lib/spotify/skipInference";
 
 const DEFAULT_SESSION_GAP_MAX_MINUTES = 45;
 
+// Spotify's Dev Mode artist object currently omits `genres` entirely, so a
+// cached row can be empty through no fault of ours. Retry those on a slow
+// cadence so they backfill if the field comes back, without re-fetching
+// every artist on every poll.
+const EMPTY_GENRE_RETRY_MS = 7 * 24 * 60 * 60 * 1000;
+
 function unauthorized() {
   return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 }
@@ -66,7 +72,7 @@ export async function POST(request: NextRequest) {
       primary_artist_name: item.track.artists[0]?.name ?? "",
       album_name: item.track.album.name,
       duration_ms: item.track.duration_ms,
-      popularity: item.track.popularity,
+      popularity: item.track.popularity ?? null,
       explicit: item.track.explicit,
       release_date: item.track.album.release_date,
       release_date_precision: item.track.album.release_date_precision,
@@ -78,16 +84,26 @@ export async function POST(request: NextRequest) {
       .select("id, played_at, duration_ms, artist_ids, track_id");
     if (insertError) throw new Error(insertError.message);
 
-    // Refresh the artist genre cache for any artists we haven't seen before.
+    // Refresh the artist genre cache for any artists we haven't seen before,
+    // plus any cached with no genres that are due for a retry.
     const allArtistIds = Array.from(new Set(newItems.flatMap((item) => item.track.artists.map((a) => a.id))));
     const { data: cachedArtists, error: cacheError } = await supabase
       .from("artist_genre_cache")
-      .select("artist_id")
+      .select("artist_id, genres, fetched_at")
       .in("artist_id", allArtistIds);
     if (cacheError) throw new Error(cacheError.message);
 
-    const cachedIds = new Set((cachedArtists ?? []).map((r) => r.artist_id as string));
-    const missingArtistIds = allArtistIds.filter((id) => !cachedIds.has(id));
+    const retryBefore = Date.now() - EMPTY_GENRE_RETRY_MS;
+    const freshIds = new Set(
+      (cachedArtists ?? [])
+        .filter(
+          (r) =>
+            ((r.genres ?? []) as string[]).length > 0 ||
+            new Date(r.fetched_at as string).getTime() > retryBefore
+        )
+        .map((r) => r.artist_id as string)
+    );
+    const missingArtistIds = allArtistIds.filter((id) => !freshIds.has(id));
 
     // Spotify removed the batch artists endpoint for Dev Mode apps
     // (Feb 2026) — fetch one at a time instead.
@@ -96,8 +112,8 @@ export async function POST(request: NextRequest) {
       const { error } = await supabase.from("artist_genre_cache").upsert(
         {
           artist_id: artist.id,
-          genres: artist.genres,
-          popularity: artist.popularity,
+          genres: artist.genres ?? [],
+          popularity: artist.popularity ?? null,
           fetched_at: new Date().toISOString(),
         },
         { onConflict: "artist_id" }

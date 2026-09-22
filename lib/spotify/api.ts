@@ -32,7 +32,7 @@ export type RecentlyPlayedItem = {
     id: string;
     name: string;
     duration_ms: number;
-    popularity: number;
+    popularity?: number;
     explicit: boolean;
     album: {
       name: string;
@@ -65,10 +65,12 @@ export async function getRecentlyPlayed(
   return res.json();
 }
 
+// `genres` and `popularity` are absent from the artist object for
+// Development Mode apps as of February 2026 — see getArtist below.
 export type SpotifyArtist = {
   id: string;
-  genres: string[];
-  popularity: number;
+  genres?: string[];
+  popularity?: number;
 };
 
 /**
