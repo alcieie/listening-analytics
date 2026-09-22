@@ -9,14 +9,20 @@ export function VibeScoreLegend() {
           Spotify shut off public access to its real energy/valence/danceability endpoint
           (<code>/audio-features</code>) for all new API apps in November 2024. This app never
           had access to it, so these charts instead use a <strong>vibe-score heuristic</strong> built
-          from data Spotify still exposes freely: each track&apos;s artist genres, popularity,
-          release era, and explicit flag.
+          from whatever Spotify still exposes: artist genres, popularity, release era, and the
+          explicit flag.
         </p>
         <p>
-          Genre keywords do most of the work; popularity and release era are weak, speculative
-          nudges. It&apos;s a reasonable proxy for &ldquo;is this loud/fast vs. mellow&rdquo; and
-          &ldquo;upbeat vs. moody&rdquo; at a glance, but it is not a measurement of the actual
-          audio.
+          <strong>As of February 2026 that heuristic is badly degraded.</strong> Spotify stopped
+          returning <code>genres</code> and <code>popularity</code> for Development Mode apps, and
+          genre keywords were doing most of the work. What&apos;s left is release era plus the
+          explicit flag, which pins nearly every track near the neutral midpoint — so the current
+          charts show very little real variation.
+        </p>
+        <p>
+          Read them as &ldquo;not measuring much right now&rdquo; rather than &ldquo;your
+          listening is uniformly average.&rdquo; Restoring the genre signal needs either extended
+          API quota from Spotify or a third-party genre source.
         </p>
       </div>
     </details>
