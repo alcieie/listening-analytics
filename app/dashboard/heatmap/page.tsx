@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getListeningHeatmap } from "@/lib/aggregate/heatmap";
+import { getDateKeyInTimeZone } from "@/lib/spotify/timeBuckets";
 import { HeatmapCalendar } from "@/components/HeatmapCalendar";
 
 export default async function HeatmapPage() {
@@ -17,7 +18,7 @@ export default async function HeatmapPage() {
   return (
     <div className="w-[90%] mx-auto space-y-6">
       <h1 className="text-xl font-semibold">Listening heatmap</h1>
-      <HeatmapCalendar days={days} />
+      <HeatmapCalendar days={days} endDate={getDateKeyInTimeZone(new Date().toISOString(), timeZone)} />
     </div>
   );
 }

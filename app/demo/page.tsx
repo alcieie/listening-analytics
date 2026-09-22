@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { getOwnerAccount } from "@/lib/account";
 import { getMoodTrend } from "@/lib/aggregate/mood";
 import { getListeningHeatmap } from "@/lib/aggregate/heatmap";
+import { getDateKeyInTimeZone } from "@/lib/spotify/timeBuckets";
 import { getSkipStats } from "@/lib/aggregate/skips";
 import { MoodRingChart } from "@/components/MoodRingChart";
 import { VibeScoreLegend } from "@/components/VibeScoreLegend";
@@ -37,7 +38,7 @@ export default async function DemoPage() {
 
       <section className="space-y-6">
         <h2 className="text-xl font-semibold">Listening heatmap</h2>
-        <HeatmapCalendar days={days} />
+        <HeatmapCalendar days={days} endDate={getDateKeyInTimeZone(new Date().toISOString(), timeZone)} />
       </section>
 
       <section className="space-y-6">
