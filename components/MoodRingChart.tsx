@@ -8,6 +8,12 @@ type Props = {
   byWeek: WeekBucket[];
 };
 
+// Without a seeded size, ResponsiveContainer renders nothing until its
+// ResizeObserver reports a measurement. In dev that first measurement can be
+// missed entirely, leaving the chart permanently blank until an unrelated
+// re-render. The observer corrects these numbers on the first frame.
+const INITIAL_DIMENSION = { width: 800, height: 256 };
+
 function formatHour(hour: number): string {
   const period = hour < 12 ? "AM" : "PM";
   const displayHour = hour % 12 === 0 ? 12 : hour % 12;
@@ -31,7 +37,7 @@ export function MoodRingChart({ byHour, byWeek }: Props) {
       <div>
         <h3 className="mb-2 font-semibold">Day/night pattern</h3>
         <div className="h-64 w-full">
-          <ResponsiveContainer>
+          <ResponsiveContainer initialDimension={INITIAL_DIMENSION}>
             <LineChart data={hourData}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
               <XAxis dataKey="label" fontSize={12} />
@@ -48,7 +54,7 @@ export function MoodRingChart({ byHour, byWeek }: Props) {
       <div>
         <h3 className="mb-2 font-semibold">Weekly trend</h3>
         <div className="h-64 w-full">
-          <ResponsiveContainer>
+          <ResponsiveContainer initialDimension={INITIAL_DIMENSION}>
             <LineChart data={byWeek}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
               <XAxis dataKey="week" fontSize={12} />
