@@ -4,6 +4,7 @@ import { getOwnerAccount } from "@/lib/account";
 import { getValidAccessToken } from "@/lib/spotify/oauth";
 import { getArtist, getRecentlyPlayed, type RecentlyPlayedItem } from "@/lib/spotify/api";
 import { inferSkip } from "@/lib/spotify/skipInference";
+import { getArtistTags } from "@/lib/lastfm";
 
 const DEFAULT_SESSION_GAP_MAX_MINUTES = 45;
 
@@ -12,6 +13,21 @@ const DEFAULT_SESSION_GAP_MAX_MINUTES = 45;
 // cadence so they backfill if the field comes back, without re-fetching
 // every artist on every poll.
 const EMPTY_GENRE_RETRY_MS = 7 * 24 * 60 * 60 * 1000;
+
+// Each backfilled artist costs one Spotify and one Last.fm request.
+const LASTFM_BACKFILL_BATCH = 25;
+
+// Plays are already stored by the time genres are fetched, so a Last.fm
+// outage must not abort the poll and lose this run's skip inference. An
+// empty result is retried on the weekly empty-genre cadence.
+async function getLastFmTagsOrEmpty(artistName: string, apiKey: string): Promise<string[]> {
+  try {
+    return await getArtistTags(artistName, apiKey);
+  } catch (err) {
+    console.warn(`Last.fm tags for "${artistName}" failed:`, err);
+    return [];
+  }
+}
 
 function unauthorized() {
   return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -105,16 +121,40 @@ export async function POST(request: NextRequest) {
     );
     const missingArtistIds = allArtistIds.filter((id) => !freshIds.has(id));
 
+    // Artists cached empty before the Last.fm fallback existed only come back
+    // around when replayed, so pick up a bounded batch of them each poll.
+    const lastFmApiKey = process.env.LASTFM_API_KEY;
+    if (lastFmApiKey) {
+      const { data: unchecked, error: uncheckedError } = await supabase
+        .from("artist_genre_cache")
+        .select("artist_id")
+        .eq("genres", "{}")
+        .is("lastfm_checked_at", null)
+        .limit(LASTFM_BACKFILL_BATCH);
+      if (uncheckedError) throw new Error(uncheckedError.message);
+      for (const row of unchecked ?? []) {
+        const id = row.artist_id as string;
+        if (!missingArtistIds.includes(id)) missingArtistIds.push(id);
+      }
+    }
+
     // Spotify removed the batch artists endpoint for Dev Mode apps
     // (Feb 2026) — fetch one at a time instead.
     for (const artistId of missingArtistIds) {
       const artist = await getArtist(accessToken, artistId);
+      let genres = artist.genres ?? [];
+      let lastFmCheckedAt: string | null = null;
+      if (genres.length === 0 && lastFmApiKey) {
+        genres = await getLastFmTagsOrEmpty(artist.name, lastFmApiKey);
+        lastFmCheckedAt = new Date().toISOString();
+      }
       const { error } = await supabase.from("artist_genre_cache").upsert(
         {
           artist_id: artist.id,
-          genres: artist.genres ?? [],
+          genres,
           popularity: artist.popularity ?? null,
           fetched_at: new Date().toISOString(),
+          lastfm_checked_at: lastFmCheckedAt,
         },
         { onConflict: "artist_id" }
       );

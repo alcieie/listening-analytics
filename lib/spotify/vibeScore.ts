@@ -53,6 +53,26 @@ const GENRE_KEYWORD_DELTAS: Record<string, GenreDelta> = {
   doom: { energy: -10, valence: -25 },
   blues: { valence: -15 },
   gospel: { valence: 15 },
+  // Common Last.fm tags (see lib/lastfm.ts), including mood words that
+  // Spotify's genre strings never had.
+  electronic: { energy: 10 },
+  dubstep: { energy: 25 },
+  "drum and bass": { energy: 25 },
+  hyperpop: { energy: 20, valence: 10 },
+  "hip hop": { energy: 10 },
+  "hip-hop": { energy: 10 },
+  folk: { energy: -15 },
+  "singer-songwriter": { energy: -10 },
+  jazz: { energy: -5, valence: 5 },
+  shoegaze: { energy: -5, valence: -5 },
+  mellow: { energy: -15 },
+  dreamy: { energy: -10 },
+  upbeat: { energy: 10, valence: 15 },
+  energetic: { energy: 20 },
+  party: { energy: 15, valence: 15 },
+  aggressive: { energy: 20, valence: -10 },
+  melanchol: { valence: -20 }, // melancholic, melancholy
+  dark: { valence: -15 },
 };
 
 function scoreGenres(genres: string[]): { energy: number; valence: number } {

@@ -41,7 +41,7 @@ into someone else's.
    no review or extra allowlisting needed for personal use.
 
 2. **Create a Supabase project** at [supabase.com](https://supabase.com),
-   then run the migration in `supabase/migrations/0001_init.sql` against it
+   then run the migrations in `supabase/migrations/` against it, in order
    (via the SQL editor, or the Supabase CLI).
 
 3. **Copy `.env.example` to `.env.local`** and fill in every value —
@@ -90,6 +90,13 @@ into someone else's.
    view of *your* data with no login required for visitors. It only ever
    reads pre-aggregated stats; raw tokens and per-play detail never leave
    the server.
+
+7. **(Recommended) Last.fm genre tags.** Spotify no longer returns artist
+   genres to Development Mode apps, and genres carry most of the vibe
+   score. Get a free API key at
+   [last.fm/api/account/create](https://www.last.fm/api/account/create) and
+   set `LASTFM_API_KEY`; the poller then fills in genres from Last.fm tags,
+   including backfilling artists it has already seen (25 per poll).
 
 ## Running tests
 

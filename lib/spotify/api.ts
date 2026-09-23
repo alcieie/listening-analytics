@@ -69,6 +69,7 @@ export async function getRecentlyPlayed(
 // Development Mode apps as of February 2026 — see getArtist below.
 export type SpotifyArtist = {
   id: string;
+  name: string;
   genres?: string[];
   popularity?: number;
 };

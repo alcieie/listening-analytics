@@ -20,9 +20,11 @@ export function VibeScoreLegend() {
           charts show very little real variation.
         </p>
         <p>
-          Read them as &ldquo;not measuring much right now&rdquo; rather than &ldquo;your
-          listening is uniformly average.&rdquo; Restoring the genre signal needs either extended
-          API quota from Spotify or a third-party genre source.
+          If a <code>LASTFM_API_KEY</code> is configured, crowd-sourced Last.fm artist tags
+          (including mood tags like &ldquo;mellow&rdquo; or &ldquo;melancholic&rdquo;) stand in
+          for Spotify&apos;s genres, which restores most of the variation. Without one, read
+          these charts as &ldquo;not measuring much right now&rdquo; rather than &ldquo;your
+          listening is uniformly average.&rdquo;
         </p>
       </div>
     </details>

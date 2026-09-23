@@ -35,6 +35,17 @@ describe("computeVibeScore", () => {
     expect(score.valence).toBeGreaterThan(50);
   });
 
+  it("reads Last.fm mood tags", () => {
+    const score = computeVibeScore({
+      genres: ["melancholic", "mellow"],
+      popularity: null,
+      releaseDate: null,
+      explicit: false,
+    });
+    expect(score.energy).toBeLessThan(50);
+    expect(score.valence).toBeLessThan(50);
+  });
+
   it("pulls energy down for ambient/acoustic genres", () => {
     const score = computeVibeScore({
       genres: ["ambient", "acoustic"],
