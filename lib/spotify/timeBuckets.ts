@@ -39,3 +39,11 @@ export function getIsoWeekKeyInTimeZone(isoTimestamp: string, timeZone: string):
 
   return `${date.getUTCFullYear()}-W${String(weekNumber).padStart(2, "0")}`;
 }
+
+const WEEKDAY_INDEX: Record<string, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+
+/** Day of week in the given timezone, Monday=0 ... Sunday=6 (ISO order). */
+export function getWeekdayInTimeZone(isoTimestamp: string, timeZone: string): number {
+  const formatter = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short" });
+  return WEEKDAY_INDEX[formatter.format(new Date(isoTimestamp))];
+}

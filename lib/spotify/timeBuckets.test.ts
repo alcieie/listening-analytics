@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getDateKeyInTimeZone, getHourInTimeZone, getIsoWeekKeyInTimeZone } from "./timeBuckets";
+import {
+  getDateKeyInTimeZone,
+  getHourInTimeZone,
+  getIsoWeekKeyInTimeZone,
+  getWeekdayInTimeZone,
+} from "./timeBuckets";
 
 describe("timeBuckets", () => {
   it("computes the UTC hour correctly", () => {
@@ -25,5 +30,12 @@ describe("timeBuckets", () => {
   it("rolls over into week 1 of the next ISO year correctly", () => {
     // Dec 31, 2025 is a Wednesday, ISO week 1 of 2026 (ISO years don't match calendar years at the boundary).
     expect(getIsoWeekKeyInTimeZone("2025-12-31T12:00:00Z", "UTC")).toBe("2026-W01");
+  });
+
+  it("computes the weekday in the given timezone, Monday first", () => {
+    // Jan 15, 2026 is a Thursday; 02:00 UTC on Jan 16 is still Thursday evening in Los Angeles.
+    expect(getWeekdayInTimeZone("2026-01-15T12:00:00Z", "UTC")).toBe(3);
+    expect(getWeekdayInTimeZone("2026-01-16T02:00:00Z", "America/Los_Angeles")).toBe(3);
+    expect(getWeekdayInTimeZone("2026-01-18T12:00:00Z", "UTC")).toBe(6);
   });
 });

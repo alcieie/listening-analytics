@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getOwnerAccount } from "@/lib/account";
-import { getMoodTrend } from "@/lib/aggregate/mood";
+import { EMPTY_MOOD_TREND, getMoodTrend } from "@/lib/aggregate/mood";
 import { getListeningHeatmap } from "@/lib/aggregate/heatmap";
 import { getDateKeyInTimeZone } from "@/lib/spotify/timeBuckets";
 import { getSkipStats } from "@/lib/aggregate/skips";
@@ -24,7 +24,7 @@ export default async function DemoPage() {
         getListeningHeatmap(supabase, account.id, timeZone),
         getSkipStats(supabase, account.id),
       ])
-    : [{ byHour: [], byWeek: [] }, [], { byArtist: [], byGenre: [] }];
+    : [EMPTY_MOOD_TREND, [], { byArtist: [], byGenre: [] }];
 
   return (
     <div className="mx-auto w-[90%] space-y-12 py-10">
@@ -33,7 +33,7 @@ export default async function DemoPage() {
       <section className="space-y-6">
         <h2 className="text-xl font-semibold">Mood ring</h2>
         <VibeScoreLegend />
-        <MoodRingChart byHour={trend.byHour} byWeek={trend.byWeek} />
+        <MoodRingChart byHour={trend.byHour} byWeek={trend.byWeek} rhythm={trend.rhythm} />
       </section>
 
       <section className="space-y-6">

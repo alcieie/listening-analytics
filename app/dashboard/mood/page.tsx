@@ -19,7 +19,7 @@ export default async function MoodPage() {
     <div className="w-[90%] mx-auto space-y-6">
       <h1 className="text-xl font-semibold">Mood ring</h1>
       <VibeScoreLegend />
-      <MoodRingChart byHour={trend.byHour} byWeek={trend.byWeek} />
+      <MoodRingChart byHour={trend.byHour} byWeek={trend.byWeek} rhythm={trend.rhythm} />
     </div>
   );
 }
