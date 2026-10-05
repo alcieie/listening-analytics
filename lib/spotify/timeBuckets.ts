@@ -1,7 +1,7 @@
 /**
- * Timezone-aware bucketing for the mood trend (hour-of-day, ISO week) and
- * heatmap (calendar day). played_at is stored in UTC; Spotify gives no
- * per-user timezone, so callers pass the app-wide TIMEZONE env var.
+ * Timezone-aware bucketing by hour, calendar day and week. played_at is
+ * stored in UTC; Spotify gives no per-user timezone, so callers pass the
+ * app-wide TIMEZONE env var.
  */
 
 export function getHourInTimeZone(isoTimestamp: string, timeZone: string): number {
@@ -46,4 +46,38 @@ const WEEKDAY_INDEX: Record<string, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, 
 export function getWeekdayInTimeZone(isoTimestamp: string, timeZone: string): number {
   const formatter = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short" });
   return WEEKDAY_INDEX[formatter.format(new Date(isoTimestamp))];
+}
+
+/** Local wall-clock time, e.g. "21:05", in the given timezone. */
+export function getTimeOfDayInTimeZone(isoTimestamp: string, timeZone: string): string {
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+  return formatter.format(new Date(isoTimestamp));
+}
+
+// Date keys are plain calendar dates, so their arithmetic is done at UTC
+// midnight where no DST shift can move a day boundary.
+function dateKeyToUtc(dateKey: string): Date {
+  return new Date(dateKey + "T00:00:00Z");
+}
+
+export function addDaysToDateKey(dateKey: string, days: number): string {
+  const date = dateKeyToUtc(dateKey);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Whole days from one date key to another; negative if `to` is earlier. */
+export function daysBetweenDateKeys(from: string, to: string): number {
+  return Math.round((dateKeyToUtc(to).getTime() - dateKeyToUtc(from).getTime()) / 86_400_000);
+}
+
+/** The Monday on or before the given date key. */
+export function getWeekStartDateKey(dateKey: string): string {
+  const mondayOffset = (dateKeyToUtc(dateKey).getUTCDay() + 6) % 7;
+  return addDaysToDateKey(dateKey, -mondayOffset);
 }

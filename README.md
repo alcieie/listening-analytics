@@ -1,17 +1,15 @@
 # Listening Analytics
 
-A personal Spotify listening-analytics app: a "mood ring" trend chart, a
-GitHub-contributions-style listening heatmap, and skip-rate analysis by
-genre/artist. Next.js (App Router) + TypeScript + Tailwind, with Supabase
-Postgres for storage.
+A personal Spotify listening-analytics app. Next.js (App Router) +
+TypeScript + Tailwind, with Supabase Postgres for storage.
 
-**Important:** Spotify shut off public access to its real audio-features
-endpoint (energy/valence/danceability) for all new API apps in November
-2024, with no way back for a new app. This app cannot use that endpoint —
-instead, "mood ring" uses an approximate **vibe-score heuristic** built from
-genres, popularity, release era, and the explicit flag (see
-`lib/spotify/vibeScore.ts` and the in-app disclaimer). It is a proxy, not a
-measurement of the actual audio.
+- **Heatmap** — a GitHub-contributions-style year of listening, with your
+  current and longest streaks and listening records above it. Click a day
+  to see every track you played that day.
+- **On repeat** — songs you played 5+ times in a week, what's on heavy
+  rotation now, and how long past obsessions lasted before you dropped them.
+- **New vs. familiar** — week by week, how much of your listening went to
+  artists you'd never played before.
 
 ## How auth works here (read this before you dig into the code)
 
@@ -88,12 +86,12 @@ into someone else's.
 6. **(Optional) Public read-only demo.** Set `PUBLIC_DEMO_ENABLED=true` and
    deploy — `/demo` (and the root `/` route) will show a live, read-only
    view of *your* data with no login required for visitors. It only ever
-   reads pre-aggregated stats; raw tokens and per-play detail never leave
-   the server.
+   shows aggregated stats; raw tokens and per-play detail (including the
+   heatmap's day view) never leave the server.
 
-7. **(Recommended) Last.fm genre tags.** Spotify no longer returns artist
-   genres to Development Mode apps, and genres carry most of the vibe
-   score. Get a free API key at
+7. **(Optional) Last.fm genre tags.** Spotify no longer returns artist
+   genres to Development Mode apps. No page uses genres right now, but if
+   you want them collected, get a free API key at
    [last.fm/api/account/create](https://www.last.fm/api/account/create) and
    set `LASTFM_API_KEY`; the poller then fills in genres from Last.fm tags,
    including backfilling artists it has already seen (25 per poll).
@@ -104,27 +102,21 @@ into someone else's.
 npm test
 ```
 
-Covers the pure heuristics: `vibeScore.ts` (genre/popularity/era scoring)
-and `skipInference.ts` (the gap-based skip heuristic), plus timezone
-bucketing.
+Covers the aggregates behind each page (streaks and records, the day
+view, obsession phases, new-vs-familiar weeks), `skipInference.ts` (the
+gap-based skip heuristic), and timezone bucketing.
 
 ## Key limitations (by design, not bugs)
 
-- **Vibe score is an approximation**, not real Spotify audio-features —
-  see the disclaimer on the mood ring page and `lib/spotify/vibeScore.ts`
-  for the exact formula and its weaknesses (coarse genre keyword matching,
-  global-not-personal popularity, no tempo signal at all, era mapping is
-  stereotype-level).
 - **No historical backfill.** Data starts accumulating the moment you
   connect Spotify; there is no way to retroactively fill in your listening
   history before that (Spotify's GDPR "Extended Streaming History" export
-  has real historical timestamps but no audio-features either way — out of
-  scope here).
-- **Skip detection combines two signals**: a passive gap-based heuristic
-  from Recently Played (covers all your listening, but approximate) and
-  real events from the in-app Web Playback SDK player (precise, but only
-  for listening sessions that happen inside this app, and requires Spotify
-  Premium). Both are visible in the UI, tagged by source.
+  has real historical timestamps, but importing it is out of scope here).
+  It also means every artist counts as "new" in your first tracked week,
+  so New vs. familiar grays that week out.
+- **Skips are still recorded but not shown anywhere.** The poller keeps
+  inferring skips from timing gaps, and the in-app Web Playback SDK player
+  records real ones (Premium only), into `skip_events`.
 - **Single-owner-per-deployment.** Not multi-tenant. Each self-hoster runs
   their own isolated instance with their own Spotify app credentials.
 
@@ -137,5 +129,5 @@ limits don't get in your way for personal use.
 
 ## Tech stack
 
-Next.js (App Router) · React · TypeScript · Tailwind CSS · Recharts ·
+Next.js (App Router) · React · TypeScript · Tailwind CSS ·
 Supabase (Postgres) · Spotify Web API + Web Playback SDK · Vitest

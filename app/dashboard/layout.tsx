@@ -7,9 +7,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
         <nav className="flex gap-5 text-sm font-medium">
           <Link href="/dashboard">Overview</Link>
-          <Link href="/dashboard/mood">Mood ring</Link>
           <Link href="/dashboard/heatmap">Heatmap</Link>
-          <Link href="/dashboard/skips">Skip rate</Link>
+          <Link href="/dashboard/repeat">On repeat</Link>
+          <Link href="/dashboard/discovery">New vs. familiar</Link>
         </nav>
         <div className="flex items-center gap-4">
           <PlaybackWidget />

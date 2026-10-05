@@ -17,8 +17,8 @@ export default async function LoginPage({
     <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
       <h1 className="text-2xl font-semibold">Listening Analytics</h1>
       <p className="max-w-sm text-sm text-zinc-500">
-        Connect your Spotify account to start tracking your mood trends, listening heatmap, and
-        skip rates.
+        Connect your Spotify account to start tracking your listening heatmap, streaks, songs on
+        repeat, and how much new music you find.
       </p>
       {error && (
         <p className="max-w-sm rounded-md bg-red-50 px-4 py-2 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">

@@ -1,9 +1,13 @@
+import Link from "next/link";
 import type { DayBucket } from "@/lib/aggregate/heatmap";
 
 type Props = {
   days: DayBucket[];
   /** Today's date key ("YYYY-MM-DD") in the app's display timezone. */
   endDate: string;
+  /** Page the grid sits on; when set, days with plays link to it with ?day=. */
+  basePath?: string;
+  selectedDate?: string;
 };
 
 const WEEKS = 53;
@@ -43,7 +47,7 @@ function toKey(date: Date): string {
 }
 
 /** GitHub-contributions-style grid: one column per week, one cell per day. */
-export function HeatmapCalendar({ days, endDate }: Props) {
+export function HeatmapCalendar({ days, endDate, basePath, selectedDate }: Props) {
   const byDate = new Map(days.map((d) => [d.date, d]));
 
   // Always render a full trailing year so the grid reads like GitHub's even
@@ -109,13 +113,23 @@ export function HeatmapCalendar({ days, endDate }: Props) {
 
             <div className="grid grid-flow-col grid-rows-7 gap-[3px]" style={columns}>
               {weeks.flatMap((week) =>
-                week.map((cell) => (
-                  <div
-                    key={cell.date}
-                    title={`${cell.date}: ${cell.bucket?.playCount ?? 0} plays, ${cell.bucket?.minutesListened ?? 0} min`}
-                    className={`aspect-square w-full rounded-[2px] ${LEVEL_CLASSES[levelForCount(cell.bucket?.playCount ?? 0, maxCount)]}`}
-                  />
-                ))
+                week.map((cell) => {
+                  const title = `${cell.date}: ${cell.bucket?.playCount ?? 0} plays, ${cell.bucket?.minutesListened ?? 0} min`;
+                  const className = `aspect-square w-full rounded-[2px] ${LEVEL_CLASSES[levelForCount(cell.bucket?.playCount ?? 0, maxCount)]}`;
+                  if (!cell.bucket || !basePath) return <div key={cell.date} title={title} className={className} />;
+                  const selected = cell.date === selectedDate;
+                  return (
+                    <Link
+                      key={cell.date}
+                      href={`${basePath}?day=${cell.date}`}
+                      scroll={false}
+                      title={title}
+                      aria-label={title}
+                      aria-current={selected ? "date" : undefined}
+                      className={`${className} block hover:ring-1 hover:ring-zinc-400 ${selected ? "ring-2 ring-zinc-900 dark:ring-zinc-100" : ""}`}
+                    />
+                  );
+                })
               )}
             </div>
           </div>
@@ -126,7 +140,7 @@ export function HeatmapCalendar({ days, endDate }: Props) {
         <span>
           {days.length === 0
             ? "No listening data yet — the poller only sees plays from the moment you connect Spotify forward."
-            : `${days.length} ${days.length === 1 ? "day" : "days"} with listening in the last year`}
+            : `${days.length} ${days.length === 1 ? "day" : "days"} with listening in the last year${basePath ? ". Click a day to see what you played." : ""}`}
         </span>
         <span className="flex items-center gap-1">
           Less

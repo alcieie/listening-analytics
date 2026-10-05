@@ -1,49 +1,49 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getOwnerAccount } from "@/lib/account";
-import { EMPTY_MOOD_TREND, getMoodTrend } from "@/lib/aggregate/mood";
-import { getListeningHeatmap } from "@/lib/aggregate/heatmap";
+import { getPlays } from "@/lib/aggregate/shared";
+import { buildHeatmap, getListeningRecords } from "@/lib/aggregate/heatmap";
+import { getObsessions } from "@/lib/aggregate/onRepeat";
+import { getDiscoveryWeeks } from "@/lib/aggregate/discovery";
 import { getDateKeyInTimeZone } from "@/lib/spotify/timeBuckets";
-import { getSkipStats } from "@/lib/aggregate/skips";
-import { MoodRingChart } from "@/components/MoodRingChart";
-import { VibeScoreLegend } from "@/components/VibeScoreLegend";
 import { HeatmapCalendar } from "@/components/HeatmapCalendar";
-import { SkipBreakdown } from "@/components/SkipBreakdown";
+import { ListeningRecords } from "@/components/ListeningRecords";
+import { ObsessionList } from "@/components/ObsessionList";
+import { DiscoveryChart } from "@/components/DiscoveryChart";
 import { DemoBanner } from "@/components/DemoBanner";
 
+// Aggregates only: the per-play day view stays behind login (see README).
 export default async function DemoPage() {
+  // Live data: render per request, not once at build time.
+  await connection();
   if (process.env.PUBLIC_DEMO_ENABLED !== "true") notFound();
 
   const timeZone = process.env.TIMEZONE ?? "UTC";
+  const today = getDateKeyInTimeZone(new Date().toISOString(), timeZone);
   const supabase = supabaseAdmin();
   const account = await getOwnerAccount(supabase);
-
-  const [trend, days, skipStats] = account
-    ? await Promise.all([
-        getMoodTrend(supabase, account.id, timeZone),
-        getListeningHeatmap(supabase, account.id, timeZone),
-        getSkipStats(supabase, account.id),
-      ])
-    : [EMPTY_MOOD_TREND, [], { byArtist: [], byGenre: [] }];
+  const plays = account ? await getPlays(supabase, account.id) : [];
+  const days = buildHeatmap(plays, timeZone);
 
   return (
     <div className="mx-auto w-[90%] space-y-12 py-10">
       <DemoBanner />
 
       <section className="space-y-6">
-        <h2 className="text-xl font-semibold">Mood ring</h2>
-        <VibeScoreLegend />
-        <MoodRingChart byHour={trend.byHour} byWeek={trend.byWeek} rhythm={trend.rhythm} />
-      </section>
-
-      <section className="space-y-6">
         <h2 className="text-xl font-semibold">Listening heatmap</h2>
-        <HeatmapCalendar days={days} endDate={getDateKeyInTimeZone(new Date().toISOString(), timeZone)} />
+        <ListeningRecords records={getListeningRecords(plays, days, today, timeZone)} />
+        <HeatmapCalendar days={days} endDate={today} />
+      </section>
+
+      <section className="max-w-3xl space-y-6">
+        <h2 className="text-xl font-semibold">On repeat</h2>
+        <ObsessionList obsessions={getObsessions(plays, new Date(), timeZone)} />
       </section>
 
       <section className="space-y-6">
-        <h2 className="text-xl font-semibold">Skip rate</h2>
-        <SkipBreakdown byArtist={skipStats.byArtist} byGenre={skipStats.byGenre} />
+        <h2 className="text-xl font-semibold">New vs. familiar</h2>
+        <DiscoveryChart weeks={getDiscoveryWeeks(plays, timeZone)} />
       </section>
     </div>
   );

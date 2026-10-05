@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Listening Analytics",
-  description: "Mood trends, a listening heatmap, and skip-rate analysis built on the Spotify Web API.",
+  description: "A listening heatmap with streaks, songs on repeat, and new-vs-familiar listening, built on the Spotify Web API.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
